@@ -1,0 +1,212 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  sessions     Session[]
+  openedCheckIns ProjectCheckIn[] @relation("CheckInOpener")
+  decidedCheckIns ProjectCheckIn[] @relation("CheckInDecider")
+  owned        Project[] @relation("Freelancer")
+  clients      Project[] @relation("Client")
+  requests     ChangeRequest[]
+  comments     Comment[]
+  events       Event[]
+  attachments  Attachment[]
+  notifications Notification[]
+}
+
+model Session {
+  id        String   @id
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Project {
+  id               String   @id @default(cuid())
+  title            String
+  description      String
+  freelancerId     String
+  clientId         String?
+  clientEmail      String
+  currency         String   @default("INR")
+  status           String   @default("ACTIVE")
+  currentVersion   Int      @default(1)
+  amountCents      Int
+  dueDate          String
+  clientAcceptedAt DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  freelancer       User @relation("Freelancer", fields: [freelancerId], references: [id])
+  client           User? @relation("Client", fields: [clientId], references: [id])
+  agreements       Agreement[]
+  checkIns         ProjectCheckIn[]
+  deliverables     Deliverable[]
+  requests         ChangeRequest[]
+  invitations      Invitation[]
+  events           Event[]
+  attachments      Attachment[]
+  @@index([freelancerId, updatedAt])
+  @@index([clientId, updatedAt])
+}
+
+model Agreement {
+  id        String   @id @default(cuid())
+  projectId String
+  version   Int
+  snapshot  Json
+  createdAt DateTime @default(now())
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  @@unique([projectId, version])
+}
+
+model Deliverable {
+  id          String   @id @default(cuid())
+  projectId   String
+  title       String
+  criteria    String
+  reviewDate  String?
+  status      String   @default("TODO")
+  reviewNote  String   @default("")
+  addedIn     Int      @default(1)
+  revision    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  attachments Attachment[]
+  @@index([projectId])
+}
+
+model ChangeRequest {
+  id               String   @id @default(cuid())
+  projectId        String
+  authorId         String
+  title            String
+  description      String
+  priority         String   @default("NORMAL")
+  status           String   @default("OPEN")
+  proposalRevision Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  project          Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  author           User @relation(fields: [authorId], references: [id])
+  proposals        Proposal[]
+  comments         Comment[]
+  attachments      Attachment[]
+  @@index([projectId, createdAt])
+}
+
+model Proposal {
+  id               String   @id @default(cuid())
+  requestId        String
+  revision         Int
+  baseVersion      Int
+  amountDeltaCents Int
+  dueDate          String
+  explanation      String
+  newDeliverables  Json
+  decision         String?
+  decisionNote     String?
+  decidedAt        DateTime?
+  createdAt        DateTime @default(now())
+  request          ChangeRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  @@unique([requestId, revision])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  requestId String
+  authorId  String
+  body      String
+  createdAt DateTime @default(now())
+  request   ChangeRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  author    User @relation(fields: [authorId], references: [id])
+  @@index([requestId, createdAt])
+}
+
+model Invitation {
+  id        String   @id @default(cuid())
+  projectId String
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  @@index([projectId])
+}
+
+model Event {
+  id        String   @id @default(cuid())
+  projectId String
+  actorId   String
+  type      String
+  message   String
+  details   Json?
+  createdAt DateTime @default(now())
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  actor     User @relation(fields: [actorId], references: [id])
+  @@index([projectId, createdAt])
+}
+
+model Attachment {
+  id            String   @id @default(cuid())
+  projectId     String
+  requestId     String?
+  deliverableId String?
+  uploaderId    String
+  name          String
+  mimeType      String
+  size          Int
+  content       Bytes
+  createdAt     DateTime @default(now())
+  project       Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  request       ChangeRequest? @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  deliverable   Deliverable? @relation(fields: [deliverableId], references: [id], onDelete: Cascade)
+  uploader      User @relation(fields: [uploaderId], references: [id])
+  @@index([projectId])
+}
+
+model ProjectCheckIn {
+  id           String   @id @default(cuid())
+  projectId    String
+  openedById   String
+  decidedById  String?
+  baseVersion  Int
+  revision     Int      @default(1)
+  action       String
+  concern      String
+  nextStep     String
+  reviewDate   String?
+  status       String   @default("PENDING")
+  decisionNote String?
+  decidedAt    DateTime?
+  createdAt    DateTime @default(now())
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  openedBy     User     @relation("CheckInOpener", fields: [openedById], references: [id])
+  decidedBy    User?    @relation("CheckInDecider", fields: [decidedById], references: [id])
+  @@index([projectId, createdAt])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  projectId String
+  message   String
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, readAt, createdAt])
+}
