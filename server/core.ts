@@ -37,7 +37,7 @@ export const scopeItem = z.object({ title: text(150), criteria: text(3000), revi
 export type Tx = Prisma.TransactionClient;
 
 export async function transaction<T>(work: (tx: Tx) => Promise<T>): Promise<T> {
-  // SQLite serializes writes. Transactions make the agreement, status, and audit log indivisible.
+  // Transactions keep the agreement, status, and audit log together.
   return db.$transaction(work, { maxWait: 5000, timeout: 10000 });
 }
 export async function projectFor(projectId: string, userId: string, client: Tx | PrismaClient = db) {

@@ -4,7 +4,7 @@ import { spawnSync } from 'node:child_process';
 
 if (!existsSync('.env')) copyFileSync('.env.example', '.env');
 dotenv.config({ quiet: true });
-const url = process.env.DATABASE_URL || 'file:./goti.db';
+const url = process.env.DATABASE_URL || '';
 if (!url.startsWith('postgresql://') && !url.startsWith('postgres://')) {
   throw new Error('Accordly expects a PostgreSQL DATABASE_URL.');
 }

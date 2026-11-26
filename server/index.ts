@@ -73,8 +73,6 @@ app.use((error: unknown, req: express.Request, res: express.Response, next: expr
   handleError(error, req, res, next);
 });
 await db.$connect();
-await db.$queryRawUnsafe('PRAGMA journal_mode = WAL');
-await db.$queryRawUnsafe('PRAGMA busy_timeout = 5000');
 await db.session.deleteMany({ where: { expiresAt: { lt: new Date() } } });
 const server = app.listen(config.port, process.env.HOST || '127.0.0.1', () => {
   console.log('Goti API listening at http://localhost:' + config.port);

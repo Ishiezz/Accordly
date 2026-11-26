@@ -79,6 +79,8 @@ flowchart LR
 
 Requires **Node.js 24 LTS+**, npm, and a PostgreSQL database. For local development, create a free Supabase project or install PostgreSQL, then set its connection string as `DATABASE_URL` in `.env`.
 
+Copy `.env.example` to `.env` first and replace the placeholder database URL. Existing SQLite data is not automatically transferred to PostgreSQL.
+
 ```sh
 npm ci
 npm run setup
