@@ -1,1 +1,0 @@
-ALTER TABLE "ProjectCheckIn" ADD COLUMN "revision" INTEGER NOT NULL DEFAULT 1;

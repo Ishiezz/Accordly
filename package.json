@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=22.12" },
+  "engines": { "node": ">=24.0.0" },
   "scripts": {
     "dev": "concurrently -k -n api,web -c cyan,green \"tsx watch server/index.ts\" \"vite --host 127.0.0.1\"",
     "build": "tsc --noEmit && vite build && tsc -p tsconfig.server.json",

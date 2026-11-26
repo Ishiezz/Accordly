@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: accordly
+    runtime: node
+    plan: free
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm run setup && npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 24.11.1
+      - key: HOST
+        value: 0.0.0.0
+      - key: APP_ORIGIN
+        sync: false
+      - key: DATABASE_URL
+        sync: false

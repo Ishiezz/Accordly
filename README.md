@@ -77,7 +77,7 @@ flowchart LR
 
 ## Run locally
 
-Requires **Node.js 22.12+** and npm.
+Requires **Node.js 24 LTS+**, npm, and a PostgreSQL database. For local development, create a free Supabase project or install PostgreSQL, then set its connection string as `DATABASE_URL` in `.env`.
 
 ```sh
 npm ci
@@ -93,14 +93,14 @@ There are no seeded accounts or default passwords. To try both sides, create a f
 
 - **Frontend:** React 19, TypeScript, React Router, Vite, Lucide icons.
 - **Backend:** Express 5, validated inputs, role and project membership checks, rate limits, security headers, and same-origin mutation checks.
-- **Persistence:** Prisma ORM 6.19.3, checked-in SQL migrations, SQLite for the current single-instance application.
+- **Persistence:** Prisma ORM 6.19.3, checked-in PostgreSQL migrations.
 - **Authentication:** Database-backed opaque sessions, HttpOnly cookies, scrypt password hashes, and session revocation on password change.
 
 ```text
 client/              Dashboard, auth, project rooms, change and check-in UI
 server/              Express routes, authentication, authorization, transactions
 prisma/schema.prisma Data model and relationships
-prisma/migrations/   Versioned database migrations
+prisma/migrations/   Versioned PostgreSQL migrations
 scripts/setup.mjs    Environment and database setup
 public/              Brand asset
 docs/screenshots/    Sample walkthrough screenshots
@@ -108,7 +108,7 @@ docs/screenshots/    Sample walkthrough screenshots
 
 The **13 database tables** are `User`, `Session`, `Project`, `Agreement`, `Deliverable`, `ChangeRequest`, `Proposal`, `Comment`, `Invitation`, `Event`, `Attachment`, `Notification`, and `ProjectCheckIn`.
 
-Amounts are stored as integer minor units (for example, paise), and deadlines as calendar dates. Agreements retain snapshots of the brief, budget, deadline, and deliverable criteria. File uploads are stored in the database, limited to 5 MB per file and 100 MB per project, validated by type, and available only to project members. The API supports PDF, PNG, JPEG, WebP, and UTF-8 text files.
+Amounts are stored as integer minor units (for example, paise), and deadlines as calendar dates. Agreements retain snapshots of the brief, budget, deadline, and deliverable criteria. File uploads are stored in PostgreSQL, limited to 5 MB per file and 100 MB per project, validated by type, and available only to project members. The API supports PDF, PNG, JPEG, WebP, and UTF-8 text files. Keep demo uploads small because Supabase Free has a 500 MB database quota.
 
 ## Rules that protect the shared record
 
@@ -140,13 +140,15 @@ npm run build
 NODE_ENV=production APP_ORIGIN=https://your-domain.example HOST=0.0.0.0 npm start
 ```
 
-Express serves the compiled React app and API from one origin. For the current SQLite design, a suitable deployment is **one Render Node web service with a persistent disk**. Use a build command such as `npm ci --include=dev && npm run build`, start with `npm run setup && npm start`, set `DATABASE_URL=file:/var/data/accordly.db`, mount the persistent disk at `/var/data`, set `APP_ORIGIN` to the service's HTTPS URL, and use `/api/health` as the health check. Render supplies `PORT`; set `HOST=0.0.0.0` and `NODE_ENV=production`. Keep the database and backups private. SQLite's online backup mechanism is needed when WAL writes are active.
+Express serves the compiled React app and API from one origin. A no-cost college demo can use **one Render Free web service with a Supabase Free PostgreSQL project**. The `render.yaml` Blueprint configures the app service. Create a Supabase project, copy its PostgreSQL connection string to Render's `DATABASE_URL`, and set `APP_ORIGIN` to the Render HTTPS service URL. Render supplies `PORT`; the Blueprint sets `HOST=0.0.0.0`, `NODE_ENV=production`, and `/api/health` as the health check. The Supabase database is external, so the Render service needs no disk. Use Supabase's session pooler connection string if direct database connectivity is unavailable.
 
-This single-instance setup is a starting point. Larger traffic would need workload testing and likely PostgreSQL, object storage, distributed rate limiting, and monitoring. Account recovery, email verification and delivery, billing, malware scanning, and certified e-signatures are outside the current version.
+Free services can sleep or pause after inactivity. A Render Free web service can take about a minute to wake after idle, and Supabase Free can pause a project after a week of low activity. Supabase Free has a 500 MB database quota and no automatic backups; it is intended for hobby projects rather than production. Keep demo records fictional, keep uploads small, and export important class-demo records. Check provider limits before provisioning. This setup is for a college demo and is not a production reliability promise.
+
+This small demo setup is a starting point. Larger traffic would need workload testing, separate object storage, distributed rate limiting, and monitoring. Account recovery, email verification and delivery, billing, malware scanning, and certified e-signatures are outside the current version.
 
 ## Configuration and useful commands
 
-Copy the keys from [`.env.example`](.env.example) into a local `.env` and adjust values for your machine. Never commit `.env`, database files, or uploads. The repository includes the lockfile and migrations so another developer can reproduce the build and schema.
+Copy the keys from [`.env.example`](.env.example) into a local `.env` and set `DATABASE_URL` to a PostgreSQL connection string. Never commit `.env` or uploads. The repository includes the lockfile and migrations so another developer can reproduce the build and schema.
 
 | Command | Purpose |
 | --- | --- |
