@@ -24,13 +24,13 @@ One account can be a freelancer on one project and a client on another. Project 
 
 ## A tour of the product
 
-These screenshots show sample projects and fictional participants. Captured on 25 November 2026, they illustrate the dashboard and check-in workflow. The current sidebar also includes Workspace and a labeled Sign out button. Account now supports editing your display name.
+These are screenshots of the running app at a 1440 × 900 laptop viewport, captured on 28 November 2026 with fictional demo accounts and projects.
 
 ### 1. Find your projects
 
 The dashboard lists active and completed projects, current budget, milestone progress, and pending work. Search by project name or filter by status. **New project** opens the setup form.
 
-![Accordly dashboard with sample projects](docs/screenshots/dashboard.jpg)
+![Accordly dashboard with sample projects](docs/screenshots/dashboard-desktop.jpg)
 
 ### 2. Set a shared starting point
 
@@ -38,29 +38,41 @@ The freelancer enters the project brief, client email, price, due date, delivera
 
 The project room has **Overview, Agreement, Changes, Milestones, Check-ins, Files, and History** tabs. The Agreement tab keeps each version available, so an approved change does not erase the original terms.
 
+![Project overview on desktop](docs/screenshots/project-desktop.jpg)
+
+![Project agreement on desktop](docs/screenshots/agreement-desktop.jpg)
+
 ### 3. Discuss a change before committing to it
 
 Either person opens a change request. The freelancer posts an impact proposal with a cost adjustment, new deadline if needed, explanation, and any added deliverables. The client can approve, decline, or ask for a revision. An approval updates the agreement and its history together. A stale proposal cannot be approved after the agreement has moved on.
+
+![Change request and impact proposal on desktop](docs/screenshots/proposal-desktop.jpg)
 
 ### 4. Deliver and review work
 
 The freelancer marks milestones in progress, attaches files, and submits them. The client reviews each milestone against the recorded acceptance criteria and either accepts it or asks for a revision. The Files tab contains shared project files; the History tab shows the decision trail.
 
+![Milestone review on desktop](docs/screenshots/milestones-desktop.jpg)
+
 ### 5. Handle a difficult moment professionally
 
 A **Check-in** lets either person state a concern and propose a next step. The author can edit, withdraw, or delete a pending check-in; the other person accepts or declines the revision they saw. Resolved records remain in the project history.
 
-![Pending check-in awaiting a response](docs/screenshots/checkin-pending.jpg)
+![Project check-in on desktop](docs/screenshots/checkins-desktop.jpg)
 
 If a pause is accepted, the project clearly shows that new work and scope changes are paused. Submitted milestones can still be reviewed. Resuming requires another accepted check-in.
 
-![Client view of a paused project](docs/screenshots/checkin-paused.jpg)
-
 Once a resumption is accepted, the project becomes active again, with the earlier check-ins still visible.
 
-![Accepted resumption and earlier check-in history](docs/screenshots/checkin-resumed.jpg)
-
 An agreed early closeout records the handover and outstanding items and makes the project read only. Accordly documents what both people entered; payment happens outside the app.
+
+### 6. Manage your workspace and account
+
+Open **Workspace** for your project count and shortcuts. Open **Account** to update your name or password. **Sign out** is available in the sidebar and Account page.
+
+![Personal workspace on desktop](docs/screenshots/workspace-desktop.jpg)
+
+![Account settings on desktop](docs/screenshots/account-desktop.jpg)
 
 ### Full workflow
 
