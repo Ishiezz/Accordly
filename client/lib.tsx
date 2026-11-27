@@ -121,8 +121,8 @@ export function ScopeFields({ items, setItems }: { items: ScopeItem[];
   setItems: (items: ScopeItem[]) => void }) {
   return <div className="scope-fields">{items.map((item, index) => <div className="scope-field" key={index}>
     <div className="row-between"><strong>Deliverable {index + 1}</strong><button type="button" className="text-button" onClick={() => setItems(items.filter((_, i) => i !== index))}>Remove</button></div>
-    <label>Title<input required maxLength={150} value={item.title} onChange={e => setItems(items.map((v, i) => i === index ? { ...v, title: e.target.value } : v))} placeholder="e.g. Responsive landing page" /></label>
-    <label>Acceptance criteria<textarea required maxLength={3000} rows={2} value={item.criteria} onChange={e => setItems(items.map((v, i) => i === index ? { ...v, criteria: e.target.value } : v))} placeholder="What needs to work before this is accepted?" /></label>
+    <label>Title<input required maxLength={150} value={item.title} onChange={e => setItems(items.map((v, i) => i === index ? { ...v, title: e.target.value } : v))} placeholder="Enter a deliverable name" /></label>
+    <label>Acceptance criteria<textarea required maxLength={3000} rows={2} value={item.criteria} onChange={e => setItems(items.map((v, i) => i === index ? { ...v, criteria: e.target.value } : v))} placeholder="Describe what the client should check before approval." /></label>
     <label>Milestone review date (optional)<input type="date" min="2000-01-01" max="2100-12-31" value={item.reviewDate || ''} onChange={e => setItems(items.map((v, i) => i === index ? { ...v, reviewDate: e.target.value || undefined } : v))} /></label>
   </div>)}
     {items.length < 20 && <button type="button" className="button secondary" onClick={() => setItems([...items, { title: '', criteria: '' }])}>+ Add deliverable</button>}

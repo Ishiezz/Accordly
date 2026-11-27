@@ -39,7 +39,7 @@ export function ChangePanel({ project: p, requestId, close, refreshProject }: {
         {!r.comments?.length && <p className="muted">Ask a question or add context for the other person.</p>}
         <div className="comments">{r.comments?.map(c => <article className="comment" key={c.id}><span className="avatar tiny">{c.author.name.slice(0, 1)}</span><div><div className="comment-meta"><strong>{c.author.name}</strong><small>{timeLabel(c.createdAt)}</small></div><p className="preserve">{c.body}</p></div></article>)}</div>
         {editable && <AsyncForm onSubmit={async () => { await post('/projects/' + p.id + '/requests/' + r.id + '/comments', { body: comment }); setComment(''); refresh(); }}>
-          <label className="sr-only" htmlFor="comment">Your comment</label><textarea id="comment" required maxLength={5000} rows={3} value={comment} onChange={e => setComment(e.target.value)} placeholder="Add to the conversation…" /><button className="button secondary"><Send size={15} /> Send comment</button>
+          <label className="sr-only" htmlFor="comment">Your comment</label><textarea id="comment" required maxLength={5000} rows={3} value={comment} onChange={e => setComment(e.target.value)} placeholder="Write a comment" /><button className="button secondary"><Send size={15} /> Send comment</button>
         </AsyncForm>}
       </section>
       {editable && pending && r.authorId === user?.id && <AsyncForm onSubmit={async () => {
@@ -71,7 +71,7 @@ function ProposalForm({ project: p, request: r, close, onDone }: { project: Proj
   const last = r.proposals[0];
   const [items, setItems] = useState<ScopeItem[]>(last?.newDeliverables ?? []);
   const [delta, setDelta] = useState(String((last?.amountDeltaCents ?? 0) / 100));
-  return <Modal title="Explain the impact" close={close} wide><p className="modal-intro">Your client will review this proposal against agreement v{p.currentVersion}. Set the final delivery date after considering dependencies and overlapping work.</p>
+  return <Modal title="Explain the impact" close={close} wide><p className="modal-intro">Your client will review this proposal against agreement v{p.currentVersion}. Include the time needed for the additional work.</p>
     <AsyncForm onSubmit={async data => {
       await post('/projects/' + p.id + '/requests/' + r.id + '/proposals', {
         revision: r.proposalRevision, baseVersion: p.currentVersion, amountDeltaCents: cents(data.get('amount')), dueDate: field(data, 'dueDate'),
@@ -80,7 +80,7 @@ function ProposalForm({ project: p, request: r, close, onDone }: { project: Proj
     }}>
       <div className="form-grid"><label>Budget adjustment ({p.currency})<input type="number" name="amount" min="-10000000" max="10000000" step=".01" required value={delta} onChange={e => setDelta(e.target.value)} /></label><label>New delivery date<input type="date" name="dueDate" required defaultValue={last?.dueDate || p.dueDate} min="2000-01-01" max="2100-12-31" /></label></div>
       <p className="form-help">Use a negative amount for a reduction. Proposed total: <strong>{money(p.amountCents + Math.round((Number(delta) || 0) * 100), p.currency)}</strong>.</p>
-      <label>Explain the work and assumptions<textarea name="explanation" defaultValue={last?.explanation} required rows={4} maxLength={5000} placeholder="What changes, how much effort it takes, and why the price or delivery date moves." /></label>
+      <label>Explain the work and assumptions<textarea name="explanation" defaultValue={last?.explanation} required rows={4} maxLength={5000} placeholder="Explain the extra work and any changes to the price or deadline." /></label>
       <h3 className="form-section-title">Additional deliverables</h3><ScopeFields items={items} setItems={setItems} /><p className="form-help">Add acceptance criteria for new work. The existing brief and deliverables remain in the version history.</p>
       <div className="form-actions"><button type="button" className="button secondary" onClick={close}>Cancel</button><button className="button">Share proposal with client</button></div>
     </AsyncForm>

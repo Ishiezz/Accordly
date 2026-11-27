@@ -75,7 +75,7 @@ function CheckInForm({ project, paused, item, onDone }: {
       <label>Concern or reason<textarea name="concern" defaultValue={item?.concern} rows={3} maxLength={3000} required /></label>
       <label>{action === 'CLOSE' ? 'Handover and outstanding items' : 'Proposed next step'}
         <textarea name="nextStep" defaultValue={item?.nextStep} rows={3} maxLength={3000} required
-          placeholder={action === 'CLOSE' ? 'List files to hand over, open issues, and any invoice references.' : 'Describe what will happen next and who will do it.'} />
+          placeholder={action === 'CLOSE' ? 'List what needs to be handed over and anything still outstanding.' : 'What should happen next, and who will take care of it?'} />
       </label>
       <label>{action === 'CLOSE' ? 'Handover date (optional)' : 'Follow-up date'}
         <input name="reviewDate" defaultValue={item?.reviewDate ?? ''} type="date" min="2000-01-01" max="2100-12-31" required={action !== 'CLOSE'} />

@@ -56,7 +56,7 @@ export function ProjectPage() {
     <div id="project-content" role="tabpanel" aria-labelledby={'tab-' + tab}>
     {tab === 'overview' && <div className="overview-grid">
       <section className="panel brief-panel"><h2>Project brief</h2><p className="preserve">{p.description}</p><div className="agreement-status"><FileCheck2 size={20} /><div><strong>{p.clientAcceptedAt ? 'Starting agreement acknowledged' : 'Waiting for client acknowledgment'}</strong><small>{p.clientAcceptedAt ? 'Both people reviewed the starting scope.' : 'The freelancer has acknowledged version 1.'}</small></div></div><button className="text-button" onClick={() => setTab('agreement')}>Open agreement</button></section>
-      <section className="panel"><div className="section-heading"><h2>Changes in conversation</h2><span className="count">{open}</span></div>{!open ? <Empty title="A clear starting point">New requests will appear here for you to work through together.</Empty> :
+      <section className="panel"><div className="section-heading"><h2>Open change requests</h2><span className="count">{open}</span></div>{!open ? <Empty title="No open change requests">Change requests will appear here.</Empty> :
         <div>{p.requests.filter(r => ['OPEN', 'PROPOSED', 'REVISION'].includes(r.status)).slice(0, 4).map(r => <button className="compact-request" key={r.id} onClick={() => setRequestId(r.id)}><strong>{r.title}</strong><Badge status={r.status} /></button>)}</div>}
         {editable && !!p.clientAcceptedAt && <button className="button secondary" onClick={() => setNewRequest(true)}><Plus size={16} /> Request a change</button>}</section>
       <section className="panel overview-history"><div className="section-heading"><h2>Latest activity</h2><button className="text-button" onClick={() => setTab('history')}>View history</button></div><Timeline project={p} limit={4} /></section>
@@ -68,7 +68,7 @@ export function ProjectPage() {
     </section>}
     {tab === 'deliverables' && <section><div className="section-heading"><div><h2>Milestones</h2><p className="muted">Submit and review each deliverable against its agreed criteria.</p></div></div><div className="deliverable-list">{p.deliverables.map(d => <Delivery key={d.id} item={d} project={p} refresh={resource.refresh} />)}</div></section>}
     {tab === 'check-ins' && <CheckInPanel project={p} refresh={resource.refresh} openAgreement={() => setTab('agreement')} />}
-    {tab === 'files' && <section className="panel"><div className="section-heading"><div><h2>Project files</h2><p className="muted">Briefs, references, and delivery files. Downloads require project access.</p></div>{editable && <FileUpload projectId={p.id} onDone={resource.refresh} />}</div>{p.attachments.length ? <Files items={p.attachments} /> : <Empty title="Room for the details">Attach a brief or reference file to this project.</Empty>}</section>}
+    {tab === 'files' && <section className="panel"><div className="section-heading"><div><h2>Project files</h2><p className="muted">Briefs, references, and delivery files. Downloads require project access.</p></div>{editable && <FileUpload projectId={p.id} onDone={resource.refresh} />}</div>{p.attachments.length ? <Files items={p.attachments} /> : <Empty title="No files uploaded">Attach a brief or reference file to this project.</Empty>}</section>}
     {tab === 'history' && <section className="panel"><div className="section-heading"><div><h2>Project history</h2><p className="muted">The latest 200 events. Export includes the complete history.</p></div><History size={21} /></div><Timeline project={p} /></section>}
     </div>
     {newRequest && <Modal title="Request a change" close={() => setNewRequest(false)}>
@@ -76,7 +76,7 @@ export function ProjectPage() {
       <AsyncForm onSubmit={async data => {
         const request = await post<{ id: string }>('/projects/' + p.id + '/requests', { title: field(data, 'title'), description: field(data, 'description'), priority: field(data, 'priority') });
         setNewRequest(false); setRequestId(request.id); resource.refresh();
-      }}><label>What would you like to change?<input name="title" required maxLength={150} placeholder="e.g. Add appointment booking" /></label><label>Details and reason<textarea name="description" required rows={5} maxLength={5000} placeholder="Describe the expected behavior and why it matters." /></label><label>Priority<select name="priority" defaultValue="NORMAL"><option value="LOW">Low</option><option value="NORMAL">Normal</option><option value="HIGH">High</option></select></label><div className="form-actions"><button type="button" className="button secondary" onClick={() => setNewRequest(false)}>Cancel</button><button className="button">Open request</button></div></AsyncForm>
+      }}><label>What would you like to change?<input name="title" required maxLength={150} placeholder="Give the change a short title" /></label><label>Details and reason<textarea name="description" required rows={5} maxLength={5000} placeholder="Explain what needs to change and why." /></label><label>Priority<select name="priority" defaultValue="NORMAL"><option value="LOW">Low</option><option value="NORMAL">Normal</option><option value="HIGH">High</option></select></label><div className="form-actions"><button type="button" className="button secondary" onClick={() => setNewRequest(false)}>Cancel</button><button className="button">Open request</button></div></AsyncForm>
     </Modal>}
     {requestId && <ChangePanel key={requestId} project={p} requestId={requestId} close={() => setRequestId(null)} refreshProject={resource.refresh} />}
     {inviteUrl && <InviteModal url={inviteUrl} email={p.clientEmail} close={() => setInviteUrl(null)} />}
@@ -92,7 +92,7 @@ export function ProjectPage() {
 function InviteModal({ url, email, close }: { url: string; email: string; close: () => void }) {
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState('');
-  return <Modal title="Bring your client in" close={close}><p className="modal-intro">Share this private invitation with <strong>{email}</strong>. They’ll need an account with that email to join. Generating another link replaces this one.</p>
+  return <Modal title="Invite your client" close={close}><p className="modal-intro">Share this private invitation with <strong>{email}</strong>. They’ll need an account with that email to join. Generating another link replaces this one.</p>
     <label>Invitation link<input readOnly value={url} onFocus={e => e.target.select()} /></label><button className="button full" onClick={async () => {
       try { await navigator.clipboard.writeText(url); setCopied(true); } catch { setError('Select and copy the link above.'); }
     }}>{copied ? <Check size={17} /> : <Copy size={17} />}{copied ? 'Link copied' : 'Copy invitation'}</button><ErrorBox message={error} /><p className="form-help">Expires in seven days. Share it through your usual email or messaging app.</p>

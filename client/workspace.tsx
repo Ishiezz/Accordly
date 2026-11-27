@@ -55,12 +55,12 @@ export function AuthPage({ register = false }: { register?: boolean }) {
           });
           setUser(result.user);
         }}>
-          {register && <label>Your name<input name="name" autoComplete="name" required maxLength={80} placeholder="e.g. Alex Taylor" /></label>}
-          <label>Email address<input name="email" type="email" autoComplete="email" required maxLength={254} placeholder="you@yourstudio.com" /></label>
-          <label>Password<input name="password" type="password" autoComplete={register ? 'new-password' : 'current-password'} required minLength={register ? 10 : 1} maxLength={128} placeholder={register ? 'At least 10 characters' : 'Your password'} /></label>
+          {register && <label>Your name<input name="name" autoComplete="name" required maxLength={80} placeholder="Enter your name" /></label>}
+          <label>Email address<input name="email" type="email" autoComplete="email" required maxLength={254} placeholder="Enter your email address" /></label>
+          <label>Password<input name="password" type="password" autoComplete={register ? 'new-password' : 'current-password'} required minLength={register ? 10 : 1} maxLength={128} placeholder={register ? 'At least 10 characters' : 'Enter your password'} /></label>
           <button className="button full">{register ? 'Create my account' : 'Sign in'}</button>
         </AsyncForm>
-        <p className="auth-note"><Handshake size={17} /> One account for freelancing and collaborating as a client.</p>
+        <p className="auth-note"><Handshake size={17} /> Use the same account as a freelancer or a client.</p>
       </div>
     </section>
   </div>;
@@ -105,7 +105,7 @@ export function Shell() {
     {notifications && <Modal title="Your inbox" close={() => setNotifications(false)}>
       {resource.loading && !resource.data ? <Loading /> : <><ErrorBox message={resource.error} />
         {!!resource.data?.unread && <AsyncForm onSubmit={async () => { await post('/notifications/read'); resource.refresh(); }}><button className="text-button">Mark all as read</button></AsyncForm>}
-        {!resource.data?.items.length && <Empty title="You’re all caught up">Project updates and decisions will appear here.</Empty>}
+        {!resource.data?.items.length && <Empty title="No notifications yet">Project updates and decisions will appear here.</Empty>}
         <div className="notification-list">{resource.data?.items.map(item => <Link className={'notification-item ' + (!item.readAt ? 'unread' : '')} key={item.id} to={'/projects/' + item.projectId} onClick={() => setNotifications(false)}><span>{item.message}</span><small>{timeLabel(item.createdAt)}</small></Link>)}</div>
       </>}
     </Modal>}
@@ -147,7 +147,7 @@ export function Dashboard() {
     </div>
     <div className="list-toolbar"><div className="filter-tabs" aria-label="Filter projects">{[['ALL', 'All projects'], ['ACTIVE', 'Active'], ['PAUSED', 'Paused'], ['COMPLETED', 'Completed'], ['CLOSED_EARLY', 'Closed early'], ['ARCHIVED', 'Archived']].map(([value, name]) =>
       <button key={value} aria-pressed={value === status} className={value === status ? 'selected' : ''} onClick={() => setStatus(value)}>{name}</button>)}</div>
-      <label className="search-field"><Search size={17} /><input aria-label="Search projects on this page" placeholder="Find a project…" value={query} onChange={e => setQuery(e.target.value)} /></label></div>
+      <label className="search-field"><Search size={17} /><input aria-label="Search projects on this page" placeholder="Search projects" value={query} onChange={e => setQuery(e.target.value)} /></label></div>
     <ErrorBox message={resource.error} />
     {resource.error && <button className="text-button" onClick={resource.refresh}>Retry</button>}
     {resource.loading && !resource.data ? <Loading /> : !projects.length && !resource.error ? <div className="first-project"><span className="first-icon"><FolderOpen size={36} /></span><h2>Start your first project</h2><p>Add a brief, budget, and deadline, then invite your client to review them.</p><button className="button" onClick={() => setCreating(true)}><Plus size={17} /> Create a project</button><span className="muted">Joining as a client? Open the invitation link your freelancer shared.</span></div> :
@@ -180,17 +180,17 @@ function CreateProject({ close }: { close: () => void }) {
       });
       navigate('/projects/' + result.id, { state: { inviteUrl: result.inviteUrl } });
     }}>
-      <label>Project name<input name="title" required maxLength={120} placeholder="e.g. Studio North website" /></label>
-      <label>The brief<textarea name="description" required rows={3} maxLength={5000} placeholder="What are you building together? Include the revision allowance and anything outside the agreement." /></label>
-      <label>Client email<input name="clientEmail" type="email" required maxLength={254} placeholder="client@business.com" /></label>
-      <div className="form-grid"><label>Starting budget<input name="amount" type="number" required min="0" max="10000000" step=".01" placeholder="15000" /></label>
+      <label>Project name<input name="title" required maxLength={120} placeholder="Enter a project name" /></label>
+      <label>The brief<textarea name="description" required rows={3} maxLength={5000} placeholder="Describe the project and what’s included." /></label>
+      <label>Client email<input name="clientEmail" type="email" required maxLength={254} placeholder="Enter your client’s email address" /></label>
+      <div className="form-grid"><label>Starting budget<input name="amount" type="number" required min="0" max="10000000" step=".01" placeholder="Enter the agreed amount" /></label>
         <label>Currency<select name="currency" defaultValue="INR"><option value="INR">INR · Indian rupee</option><option value="USD">USD · US dollar</option><option value="EUR">EUR · Euro</option><option value="GBP">GBP · Pound</option></select></label></div>
       <label>Agreed delivery date<input name="dueDate" type="date" required min="2000-01-01" max="2100-12-31" /></label>
       <h3 className="form-section-title">What’s included</h3><ScopeFields items={items} setItems={setItems} />
       <h3 className="form-section-title">Working terms</h3>
-      <label>Revision allowance (optional)<textarea name="revisions" maxLength={1500} rows={2} placeholder="e.g. Two review rounds per milestone" /></label>
-      <label>Payment schedule (optional)<textarea name="payment" maxLength={1500} rows={2} placeholder="e.g. Deposit before work starts, balance after final acceptance" /></label>
-      <label>Pause and early exit terms (optional)<textarea name="earlyExit" maxLength={1500} rows={2} placeholder="Record agreed notice, handover, and treatment of work already submitted" /></label>
+      <label>Revision allowance (optional)<textarea name="revisions" maxLength={1500} rows={2} placeholder="How many revision rounds are included?" /></label>
+      <label>Payment schedule (optional)<textarea name="payment" maxLength={1500} rows={2} placeholder="When are payments due?" /></label>
+      <label>Pause and early exit terms (optional)<textarea name="earlyExit" maxLength={1500} rows={2} placeholder="What have you agreed if the project pauses or ends early?" /></label>
       <p className="form-help">Creating this project records your acknowledgment as the freelancer. Your client will review it before work begins.</p>
       <div className="form-actions"><button type="button" className="button secondary" onClick={close}>Cancel</button><button className="button">Create agreement</button></div>
     </AsyncForm>
@@ -218,7 +218,7 @@ export function SettingsPage() {
       }}>
         <label>Your name<input name="name" defaultValue={user?.name} autoComplete="name" required maxLength={80} onChange={() => setProfileSaved(false)} /></label>
         <label>Email address<input value={user?.email ?? ''} type="email" readOnly aria-describedby="account-email-help" /></label>
-        <p id="account-email-help" className="form-help">Your email identifies your account and project invitations. Contact details in existing projects stay linked to this account.</p>
+        <p id="account-email-help" className="form-help">Use this email when someone invites you to a project.</p>
         <button className="button">Save name</button>{profileSaved && <p className="success-note" role="status">Your name has been updated.</p>}
       </AsyncForm></div>
     <div className="panel"><h2>Change password</h2><p className="muted">Updating your password signs out your other sessions.</p>
@@ -230,7 +230,7 @@ export function SettingsPage() {
         <label>New password<input type="password" name="password" autoComplete="new-password" required minLength={10} maxLength={128} onChange={() => setSaved(false)} /></label>
         <label>Confirm new password<input type="password" name="confirm" autoComplete="new-password" required minLength={10} maxLength={128} /></label>
         <button className="button">Update password</button>
-        {saved && <p className="success-note" role="status">Your password has been updated.</p>}
+        {saved && <p className="success-note" role="status">Enter your password has been updated.</p>}
       </AsyncForm></div>
     <section className="panel"><h2>Current session</h2><p className="muted">Signed in as {user?.email}. Sign out when using a shared computer.</p><SignOutButton /></section>
   </main>;
