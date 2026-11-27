@@ -7,7 +7,7 @@ import multer from 'multer';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { existsSync } from 'node:fs';
-import { config, db, assert, handleError } from './core.js';
+import { config, db, assert, handleError, requireProjectAccess } from './core.js';
 import { auth, authenticate } from './auth.js';
 import { projects, invites } from './projects.js';
 import { changes } from './changes.js';
@@ -44,11 +44,15 @@ app.get('/api/health', async (_req, res) => {
   res.json({ status: 'ok' });
 });
 app.use('/api/auth', auth);
-app.use('/api/projects/:projectId/check-ins', authenticate, checkIns);
-app.use('/api/projects', authenticate, projects);
-app.use('/api/projects/:projectId/requests', authenticate, changes);
-app.use('/api/invites', authenticate, invites);
-app.use('/api', authenticate, files);
+app.use('/api', authenticate);
+// Every project URL is checked before validation, file buffering, or route handling.
+// Mutations also recheck membership inside their transaction.
+app.use('/api/projects/:projectId', requireProjectAccess);
+app.use('/api/projects/:projectId/check-ins', checkIns);
+app.use('/api/projects', projects);
+app.use('/api/projects/:projectId/requests', changes);
+app.use('/api/invites', invites);
+app.use('/api', files);
 app.get('/api/notifications', async (req, res) => {
   const items = await db.notification.findMany({ where: { userId: req.user.id }, orderBy: { createdAt: 'desc' }, take: 100 });
   const unread = await db.notification.count({ where: { userId: req.user.id, readAt: null } });

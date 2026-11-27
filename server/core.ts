@@ -40,12 +40,20 @@ export async function transaction<T>(work: (tx: Tx) => Promise<T>): Promise<T> {
   // Transactions keep the agreement, status, and audit log together.
   return db.$transaction(work, { maxWait: 5000, timeout: 10000 });
 }
+// Use the authenticated session identity, never an ID or role supplied by the caller.
+export function projectMembership(userId: string): Prisma.ProjectWhereInput {
+  return { OR: [{ freelancerId: userId }, { clientId: userId }] };
+}
 export async function projectFor(projectId: string, userId: string, client: Tx | PrismaClient = db) {
   const project = await client.project.findFirst({
-    where: { id: projectId, OR: [{ freelancerId: userId }, { clientId: userId }] },
+    where: { id: projectId, ...projectMembership(userId) },
   });
   assert(project, 404, 'Project not found.');
   return project;
+}
+export async function requireProjectAccess(req: Request, _res: Response, next: NextFunction) {
+  await projectFor(z.string().parse(req.params.projectId), req.user.id);
+  next();
 }
 export function active(project: Project) {
   assert(project.status !== 'PAUSED', 409, 'Project work is paused. Use Check-ins to propose resuming it.');

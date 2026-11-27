@@ -56,6 +56,11 @@ auth.post('/login', authLimit, async (req, res) => {
   res.json({ user: { id: user!.id, name: user!.name, email: user!.email } });
 });
 auth.get('/me', authenticate, (req, res) => { res.json({ user: req.user }); });
+auth.patch('/profile', authenticate, async (req, res) => {
+  const { name } = z.object({ name: text(80) }).strict().parse(req.body);
+  const user = await db.user.update({ where: { id: req.user.id }, data: { name }, select: publicUser });
+  res.json({ user });
+});
 auth.post('/logout', async (req, res) => {
   const raw = req.cookies[cookieName];
   if (typeof raw === 'string') await db.session.deleteMany({ where: { id: hash(raw) } });

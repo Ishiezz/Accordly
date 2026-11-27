@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { db, assert, active, agreed, owner, clientRole, projectFor, transaction, record,
-  publicUser, text, date, scopeItem } from './core.js';
+  publicUser, text, date, scopeItem, projectMembership } from './core.js';
 import { attachmentSelect } from './projects.js';
 
 export const changes = Router({ mergeParams: true });
@@ -28,8 +28,7 @@ changes.post('/', async (req, res) => {
   res.status(201).json(request);
 });
 changes.get('/:id', async (req, res) => {
-  await projectFor(projectId(req), req.user.id);
-  const request = await db.changeRequest.findFirst({ where: { id: req.params.id, projectId: projectId(req) },
+  const request = await db.changeRequest.findFirst({ where: { id: req.params.id, projectId: projectId(req), project: projectMembership(req.user.id) },
     include: { author: { select: publicUser }, proposals: { orderBy: { revision: 'desc' } },
       comments: { orderBy: { createdAt: 'asc' }, include: { author: { select: publicUser } } },
       attachments: { select: attachmentSelect, orderBy: { createdAt: 'asc' } } } });

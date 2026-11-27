@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { db, assert, active, owner, clientRole, agreed, projectFor, transaction, record,
-  invitation, hash, publicUser, email, text, date, money, scopeItem } from './core.js';
+  invitation, hash, publicUser, email, text, date, money, scopeItem, projectMembership } from './core.js';
 
 import { checkInDetails } from './check-ins.js';
 
@@ -12,7 +12,7 @@ export { attachmentSelect };
 
 projects.get('/', async (req, res) => {
   const page = z.coerce.number().int().min(1).max(100000).parse(req.query.page ?? 1);
-  const where = { OR: [{ freelancerId: req.user.id }, { clientId: req.user.id }] };
+  const where = projectMembership(req.user.id);
   const [items, total] = await db.$transaction([
     db.project.findMany({ where, orderBy: { updatedAt: 'desc' }, take: 24, skip: (page - 1) * 24,
       include: { freelancer: { select: publicUser }, client: { select: publicUser },
@@ -52,8 +52,7 @@ projects.post('/', async (req, res) => {
   res.status(201).json(result);
 });
 projects.get('/:id', async (req, res) => {
-  await projectFor(req.params.id, req.user.id);
-  const project = await db.project.findUniqueOrThrow({ where: { id: req.params.id }, include: {
+  const project = await db.project.findFirst({ where: { id: req.params.id, ...projectMembership(req.user.id) }, include: {
     freelancer: { select: publicUser }, client: { select: publicUser },
     checkIns: { orderBy: { createdAt: 'desc' }, include: checkInDetails },
     agreements: { orderBy: { version: 'asc' } },
@@ -63,6 +62,7 @@ projects.get('/:id', async (req, res) => {
     events: { orderBy: { createdAt: 'desc' }, take: 200, include: { actor: { select: publicUser } } },
     attachments: { select: attachmentSelect, orderBy: { createdAt: 'desc' } },
   } });
+  assert(project, 404, 'Project not found.');
   res.json(project);
 });
 projects.post('/:id/invite', async (req, res) => {
@@ -130,7 +130,7 @@ projects.patch('/:id/deliverables/:deliverableId', async (req, res) => {
       assert(input.action !== 'revise' || input.note.length > 0, 400, 'Explain what needs to be revised.');
       status = input.action === 'accept' ? 'ACCEPTED' : 'REVISION';
     }
-    const changed = await tx.deliverable.updateMany({ where: { id: d.id, revision: input.revision },
+    const changed = await tx.deliverable.updateMany({ where: { id: d.id, projectId: project.id, revision: input.revision },
       data: { status, reviewNote: input.note, revision: { increment: 1 } } });
     assert(changed.count === 1, 409, 'Another review was recorded. Refresh and try again.');
     await tx.project.update({ where: { id: project.id }, data: { updatedAt: new Date() } });
@@ -140,8 +140,7 @@ projects.patch('/:id/deliverables/:deliverableId', async (req, res) => {
   res.json({ ok: true });
 });
 projects.get('/:id/export', async (req, res) => {
-  await projectFor(req.params.id, req.user.id);
-  const project = await db.project.findUniqueOrThrow({ where: { id: req.params.id }, include: {
+  const project = await db.project.findFirst({ where: { id: req.params.id, ...projectMembership(req.user.id) }, include: {
     freelancer: { select: publicUser }, client: { select: publicUser },
     checkIns: { orderBy: { createdAt: 'desc' }, include: checkInDetails },
     agreements: { orderBy: { version: 'asc' } }, deliverables: true,
@@ -149,6 +148,7 @@ projects.get('/:id/export', async (req, res) => {
     events: { orderBy: { createdAt: 'asc' }, include: { actor: { select: publicUser } } },
     attachments: { select: attachmentSelect },
   } });
+  assert(project, 404, 'Project not found.');
   res.attachment('goti-project-' + project.id + '.json').json({ exportedAt: new Date().toISOString(), project });
 });
 

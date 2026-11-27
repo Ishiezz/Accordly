@@ -2,7 +2,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import path from 'node:path';
 import { z } from 'zod';
-import { db, assert, active, owner, projectFor, transaction, record } from './core.js';
+import { db, assert, active, owner, projectFor, transaction, record, projectMembership } from './core.js';
 import { attachmentSelect } from './projects.js';
 
 export const files = Router();
@@ -48,10 +48,10 @@ files.post('/projects/:id/attachments', upload.single('file'), async (req, res) 
   res.status(201).json(attachment);
 });
 files.get('/attachments/:id', async (req, res) => {
-  const attachment = await db.attachment.findUnique({ where: { id: req.params.id }, select: { projectId: true } });
-  assert(attachment, 404, 'File not found.');
-  await projectFor(attachment.projectId, req.user.id);
-  const file = await db.attachment.findUniqueOrThrow({ where: { id: req.params.id } });
+  const file = await db.attachment.findFirst({
+    where: { id: req.params.id, project: projectMembership(req.user.id) },
+  });
+  assert(file, 404, 'File not found.');
   res.setHeader('Content-Type', file.mimeType);
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.attachment(file.name).send(Buffer.from(file.content));
