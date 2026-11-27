@@ -1,5 +1,7 @@
 # Accordly
 
+[Open the live app](https://accordly-5uv0.onrender.com)
+
 **A shared project room for freelancers and clients.** Agree on the starting brief, track proposed changes, review delivery, and keep a clear record of decisions in one place.
 
 Freelance projects often drift through scattered chats: a request changes the price, a deadline moves, or a deliverable is reviewed without a shared record of what was approved. Accordly gives both people the same project history. It makes the next step visible while keeping the working relationship collaborative.
@@ -22,7 +24,7 @@ One account can be a freelancer on one project and a client on another. Project 
 
 ## A tour of the product
 
-These screenshots show sample projects and fictional participants. They contain no real client work.
+These screenshots show sample projects and fictional participants. Captured on 25 November 2026, they illustrate the dashboard and check-in workflow. The current sidebar also includes Workspace and a labeled Sign out button. Account now supports editing your display name.
 
 ### 1. Find your projects
 
@@ -70,11 +72,16 @@ flowchart LR
     D -- Yes --> E[Request and impact proposal]
     E --> F{Client decision}
     F -- Approve --> G[New agreement version]
-    F -- Revise or decline --> E
+    F -- Request revision --> E
+    F -- Decline --> C
     G --> C
-    D -- No --> H[Complete project]
-    C --> I[Check-in: follow-up, pause, resume, or closeout]
-    I --> C
+    D -- No --> H[Accept all deliveries and resolve open items]
+    H --> J[Complete project]
+    C --> I{Agreed check-in outcome}
+    I -- Follow-up or resume --> C
+    I -- Pause --> K[Work paused]
+    K -- Agreed resumption --> C
+    I -- Early closeout --> L[Read-only project record]
 ```
 
 ## Run locally
@@ -127,7 +134,7 @@ Amounts are stored as integer minor units (for example, paise), and deadlines as
 
 | Route group | Purpose |
 | --- | --- |
-| `/api/auth/*` | Register, sign in/out, current account, password change |
+| `/api/auth/*` | Register, sign in/out, current account, display-name editing, password change |
 | `/api/projects/*` | Project list, creation, agreements, invitations, milestones, status, export |
 | `/api/invites/*` | Inspect and accept a client invitation |
 | `/api/projects/:id/requests/*` | Change requests, proposals, decisions, discussion |
@@ -142,6 +149,7 @@ Mutations use the `X-Goti-Request: 1` header and an `APP_ORIGIN` check. Browser 
 
 ```sh
 npm run build
+npm run db:migrate
 NODE_ENV=production APP_ORIGIN=https://your-domain.example HOST=0.0.0.0 npm start
 ```
 
@@ -164,7 +172,7 @@ Copy the keys from [`.env.example`](.env.example) into a local `.env` and set `D
 | `npm run test:authorization` | Run isolated PostgreSQL and HTTP access-control regression checks |
 | `npm start` | Serve the production build |
 
-The authorization regression command requires local PostgreSQL tools (`initdb`, `pg_ctl`) on `PATH`. It creates its own temporary database and API server on loopback ports, uses fictional accounts, checks unrelated-user access, mixed project/item IDs, role restrictions, profile ownership, notification isolation, and session revocation, then removes its database. It never uses your configured `DATABASE_URL` or deployed data.
+The authorization regression command requires local PostgreSQL tools (`initdb`, `pg_ctl`) on `PATH`. It creates its own temporary database and API server on loopback ports, uses fictional accounts, checks unrelated-user access, mixed project/item IDs, role restrictions, profile ownership, notification isolation, session revocation, pause and resume, early closeout, completion requirements, exports, and password changes, then removes its database. It never uses your configured `DATABASE_URL` or deployed data.
 
 ## Current limits
 

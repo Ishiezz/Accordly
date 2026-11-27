@@ -206,6 +206,7 @@ try {
   assert.deepEqual(await db.notification.findMany({ where: { userId: clientA.id } }), clientNotifications);
 
   // Positive controls ensure restrictions still allow the intended collaboration.
+  await call(ownerA, 'PATCH', `/projects/${p}/status`, { status: 'COMPLETED' }, 409);
   await call(ownerA, 'POST', `/projects/${p}/attachments`, a.upload({ deliverableId: d }), 201);
   await call(ownerA, 'PATCH', `/projects/${p}/deliverables/${d}`, { action: 'submit', revision: 0 });
   await call(clientA, 'PATCH', `/projects/${p}/deliverables/${d}`, { action: 'accept', revision: 1 });
@@ -220,6 +221,38 @@ try {
   await call(clientA, 'POST', `/projects/${p}/check-ins/${pending.id}/decision`, { revision: 2, decision: 'ACCEPTED' });
   const { data: deletable } = await call(ownerA, 'POST', `/projects/${p}/check-ins`, a.plan, 201);
   await call(ownerA, 'DELETE', `/projects/${p}/check-ins/${deletable.id}`, { revision: 1 });
+
+  await call(clientA, 'POST', `/projects/${p}/requests/${r}/decision`, { revision: 1, decision: 'APPROVED' }, 409);
+  const checkPath = `/projects/${p}/check-ins`;
+  for (const [action, status] of [['PAUSE', 'PAUSED'], ['RESUME', 'ACTIVE']]) {
+    const { data: item } = await call(ownerA, 'POST', checkPath, { ...a.plan, action }, 201);
+    await call(clientA, 'POST', checkPath + '/' + item.id + '/decision', { revision: 1, decision: 'ACCEPTED' });
+    assert.equal((await call(clientA, 'GET', `/projects/${p}`)).data.status, status);
+    if (status === 'PAUSED') await call(clientA, 'POST', `/projects/${p}/requests`, { title: 'Paused', description: 'Paused', priority: 'NORMAL' }, 409);
+  }
+  const { data: removed } = await call(ownerA, 'POST', checkPath, a.plan, 201);
+  await call(ownerA, 'POST', checkPath + '/' + removed.id + '/decision', { revision: 1, decision: 'WITHDRAWN' });
+  await call(ownerA, 'PATCH', `/projects/${p}/status`, { status: 'COMPLETED' });
+  assert.equal((await call(ownerA, 'GET', `/projects/${p}`)).data.status, 'COMPLETED');
+  const exported = (await call(clientA, 'GET', `/projects/${p}/export`)).data.project;
+  assert.equal(exported.agreements.length, 2);
+  assert.equal(exported.amountCents, 101000);
+  assert(exported.events.some(event => event.type === 'CHECK_IN_DECIDED'));
+  assert(exported.attachments.some(file => file.id === a.attachment.id));
+  const bp = '/projects/' + b.project.id;
+  await call(clientB, 'POST', bp + '/check-ins/' + b.checkIn.id + '/decision', { revision: 1, decision: 'DECLINED' });
+  const { data: closeout } = await call(ownerB, 'POST', bp + '/check-ins', { ...b.plan, action: 'CLOSE' }, 201);
+  await call(clientB, 'POST', bp + '/check-ins/' + closeout.id + '/decision', { revision: 1, decision: 'ACCEPTED' });
+  assert.equal((await call(ownerB, 'GET', bp)).data.status, 'CLOSED_EARLY');
+  const creds = { email: ownerA.email, password: 'Fictional-test-password-42' };
+  const { cookie: oldCookie } = await call(null, 'POST', '/auth/login', creds);
+  const newPassword = 'Fictional-replacement-password-42';
+  const { cookie: newCookie } = await call(ownerA, 'POST', '/auth/password', { currentPassword: creds.password, password: newPassword });
+  await call({ cookie: oldCookie }, 'GET', '/auth/me', undefined, 401);
+  await call({ cookie: newCookie }, 'GET', '/auth/me');
+  await call(null, 'POST', '/auth/login', creds, 401);
+  await call(null, 'POST', '/auth/login', { ...creds, password: newPassword });
+  ownerA.cookie = newCookie;
   await call(ownerA, 'POST', '/auth/logout', {});
   await call(ownerA, 'GET', '/auth/me', undefined, 401);
   await call(ownerA, 'GET', `/projects/${p}`, undefined, 401);
