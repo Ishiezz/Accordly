@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { api, AuthContext, Loading } from './lib';
 import type { User } from './types';
-import { AuthPage, Dashboard, JoinPage, Shell, SettingsPage } from './workspace';
+import { AuthPage, Dashboard, JoinPage, Shell, SettingsPage, WorkspacePage } from './workspace';
 import { ProjectPage } from './project';
 import './styles.css';
 
@@ -29,6 +29,7 @@ function App() {
       <Route path="/register" element={<AuthPage register />} />
       <Route element={user ? <Shell /> : <Navigate to={redirect} replace />}>
         <Route index element={<Dashboard />} />
+        <Route path="/workspace" element={<WorkspacePage />} />
         <Route path="/projects/:id" element={<ProjectPage key={location.pathname} />} />
         <Route path="/join/:token" element={<JoinPage />} />
         <Route path="/settings" element={<SettingsPage />} />

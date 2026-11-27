@@ -9,6 +9,21 @@ import type { User, ProjectCard, Notification, ScopeItem } from './types';
 export function Logo({ light = false }: { light?: boolean }) {
   return <span className={'logo ' + (light ? 'light' : '')}><img className="logo-mark" src="/accordly-approved-change.png" alt="" width={36} height={36} />Accordly</span>;
 }
+function SignOutButton({ sidebar = false }: { sidebar?: boolean }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  return <div className={sidebar ? 'sidebar-signout' : 'account-signout'}>
+    <button className={sidebar ? 'sidebar-signout-button' : 'button secondary'} disabled={busy} onClick={async () => {
+      setBusy(true); setError('');
+      try {
+        await post('/auth/logout');
+        // Reload clears project data and pending UI state from this browser session.
+        window.location.replace('/login');
+      } catch (err) { setError((err as Error).message); setBusy(false); }
+    }}><LogOut size={18} />{busy ? 'Signing out…' : 'Sign out'}</button>
+    <ErrorBox message={error} />
+  </div>;
+}
 export function AuthPage({ register = false }: { register?: boolean }) {
   const { user, setUser } = useAuth();
   const [search] = useSearchParams();
@@ -51,7 +66,7 @@ export function AuthPage({ register = false }: { register?: boolean }) {
   </div>;
 }
 export function Shell() {
-  const { user, setUser } = useAuth();
+  const { user } = useAuth();
   const [mobile, setMobile] = useState(false);
   const [smallScreen, setSmallScreen] = useState(() => window.matchMedia('(max-width: 720px)').matches);
   useEffect(() => {
@@ -61,7 +76,6 @@ export function Shell() {
     return () => media.removeEventListener('change', update);
   }, []);
   const [notifications, setNotifications] = useState(false);
-  const [error, setError] = useState('');
   const resource = useResource<{ items: Notification[]; unread: number }>('/notifications');
   const location = useLocation();
   useEffect(() => { setMobile(false); }, [location.pathname]);
@@ -75,19 +89,17 @@ export function Shell() {
     <aside id="workspace-nav" inert={smallScreen && !mobile} aria-hidden={smallScreen && !mobile} className={'sidebar ' + (mobile ? 'mobile-open' : '')}>
       <Link className="sidebar-brand" to="/"><Logo light /></Link>
       <span className="workspace-label">YOUR WORKSPACE</span>
-      <nav><NavLink to="/" end><LayoutGrid size={18} /> Projects</NavLink>
+      <nav aria-label="Main navigation"><NavLink to="/workspace"><BriefcaseBusiness size={18} /> Workspace</NavLink>
+        <NavLink to="/" end><LayoutGrid size={18} /> Projects</NavLink>
         <button onClick={() => { setNotifications(true); setMobile(false); }}><Bell size={18} /> Inbox {resource.data?.unread ? <span className="nav-count">{resource.data.unread}</span> : null}</button>
         <NavLink to="/settings"><Settings size={18} /> Account</NavLink></nav>
-      <div className="sidebar-user"><span className="avatar">{user?.name.slice(0, 1).toUpperCase()}</span><div><strong>{user?.name}</strong><small>Personal workspace</small></div>
-        <button className="icon-button" aria-label="Sign out" onClick={async () => {
-          try { await post('/auth/logout'); setUser(null); } catch (err) { setError((err as Error).message); }
-        }}><LogOut size={17} /></button></div>
+      <div className="sidebar-footer"><Link className="sidebar-user" to="/settings" aria-label="Open your account"><span className="avatar">{user?.name.slice(0, 1).toUpperCase()}</span><div><strong>{user?.name}</strong><small>Manage account</small></div></Link>
+        <SignOutButton sidebar /></div>
     </aside>
     {mobile && <button className="mobile-scrim" aria-label="Close navigation" onClick={() => setMobile(false)} />}
     <div className="app-main">
-      <header className="topbar"><div className="topbar-breadcrumb"><button className="icon-button mobile-menu" onClick={() => setMobile(!mobile)} aria-label="Toggle navigation" aria-expanded={mobile} aria-controls="workspace-nav">{mobile ? <X size={20} /> : <Menu size={20} />}</button><span>Workspace</span><ChevronRight size={14} /><strong>{location.pathname.includes('/projects/') ? 'Project room' : location.pathname === '/settings' ? 'Account' : location.pathname.startsWith('/join/') ? 'Invitation' : 'Projects'}</strong></div>
+      <header className="topbar"><div className="topbar-breadcrumb"><button className="icon-button mobile-menu" onClick={() => setMobile(!mobile)} aria-label="Toggle navigation" aria-expanded={mobile} aria-controls="workspace-nav">{mobile ? <X size={20} /> : <Menu size={20} />}</button><Link to="/workspace">Workspace</Link><ChevronRight size={14} /><strong>{location.pathname.includes('/projects/') ? 'Project room' : location.pathname === '/settings' ? 'Account' : location.pathname === '/workspace' ? 'Overview' : location.pathname.startsWith('/join/') ? 'Invitation' : 'Projects'}</strong></div>
         <button className="notification-button icon-button" onClick={() => { setNotifications(true); resource.refresh(); }} aria-label={'Open inbox' + (resource.data?.unread ? ', ' + resource.data.unread + ' unread' : '')}><Bell size={19} />{!!resource.data?.unread && <span className="notification-dot" />}</button></header>
-      {error && <ErrorBox message={error} />}
       <Outlet />
     </div>
     {notifications && <Modal title="Your inbox" close={() => setNotifications(false)}>
@@ -98,6 +110,21 @@ export function Shell() {
       </>}
     </Modal>}
   </div>;
+}
+export function WorkspacePage() {
+  const { user } = useAuth();
+  const resource = useResource<{ total: number }>('/projects');
+  return <main className="page settings-page">
+    <div className="page-heading"><h1>Your workspace</h1><p className="muted">Your freelance work and client collaborations, together.</p></div>
+    <section className="panel"><h2>{user?.name}’s workspace</h2>
+      <p className="muted">This is your personal workspace. Each project is shared only with its freelancer and the client who accepts its invitation.</p>
+      <dl className="details-list"><div><dt>Signed in as</dt><dd>{user?.email}</dd></div><div><dt>Projects you belong to</dt><dd>{resource.loading ? 'Loading…' : resource.data?.total ?? 'Unavailable'}</dd></div></dl>
+      <ErrorBox message={resource.error} />{resource.error && <button className="text-button" onClick={resource.refresh}>Retry</button>}
+      <Link className="button" to="/">Open projects</Link>
+    </section>
+    <section className="panel"><h2>Working with someone</h2><p className="muted">Create a project from Projects to work as a freelancer. To join as a client, open the invitation your freelancer shared and sign in with the invited email address. Your role is set for each project.</p></section>
+    <section className="panel"><h2>Account and security</h2><p className="muted">Update your name, change your password, or sign out of this browser.</p><Link className="button secondary" to="/settings">Manage account</Link></section>
+  </main>;
 }
 export function Dashboard() {
   const { user } = useAuth();
@@ -180,10 +207,20 @@ export function JoinPage() {
   </main>;
 }
 export function SettingsPage() {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const [saved, setSaved] = useState(false);
+  const [profileSaved, setProfileSaved] = useState(false);
   return <main className="page settings-page"><h1>Account</h1>
-    <div className="panel"><h2>Account details</h2><dl className="details-list"><div><dt>Name</dt><dd>{user?.name}</dd></div><div><dt>Email</dt><dd>{user?.email}</dd></div></dl></div>
+    <div className="panel"><h2>Account details</h2>
+      <AsyncForm onSubmit={async data => {
+        const result = await api<{ user: User }>('/auth/profile', { method: 'PATCH', body: JSON.stringify({ name: field(data, 'name') }) });
+        setUser(result.user); setProfileSaved(true);
+      }}>
+        <label>Your name<input name="name" defaultValue={user?.name} autoComplete="name" required maxLength={80} onChange={() => setProfileSaved(false)} /></label>
+        <label>Email address<input value={user?.email ?? ''} type="email" readOnly aria-describedby="account-email-help" /></label>
+        <p id="account-email-help" className="form-help">Your email identifies your account and project invitations. Contact details in existing projects stay linked to this account.</p>
+        <button className="button">Save name</button>{profileSaved && <p className="success-note" role="status">Your name has been updated.</p>}
+      </AsyncForm></div>
     <div className="panel"><h2>Change password</h2><p className="muted">Updating your password signs out your other sessions.</p>
       <AsyncForm onSubmit={async data => {
         if (data.get('password') !== data.get('confirm')) throw new Error('The new passwords do not match.');
@@ -195,5 +232,6 @@ export function SettingsPage() {
         <button className="button">Update password</button>
         {saved && <p className="success-note" role="status">Your password has been updated.</p>}
       </AsyncForm></div>
+    <section className="panel"><h2>Current session</h2><p className="muted">Signed in as {user?.email}. Sign out when using a shared computer.</p><SignOutButton /></section>
   </main>;
 }

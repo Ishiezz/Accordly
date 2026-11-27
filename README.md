@@ -18,6 +18,8 @@ Freelance projects often drift through scattered chats: a request changes the pr
 
 One account can be a freelancer on one project and a client on another. Project access follows membership and role, rather than a fixed account type.
 
+**Workspace** opens your personal workspace overview and project count. **Account** lets you edit your display name and change your password. A labeled **Sign out** button is available in the sidebar and on the Account page; it revokes the current session and returns to sign-in.
+
 ## A tour of the product
 
 These screenshots show sample projects and fictional participants. They contain no real client work.
@@ -114,6 +116,7 @@ Amounts are stored as integer minor units (for example, paise), and deadlines as
 
 ## Rules that protect the shared record
 
+- Every project URL checks the signed-in user's membership before handling inputs or uploads. Project, export, request, and file reads also include membership in the database query. Unrelated users receive a generic 404; nested request, milestone, and check-in IDs must belong to the project in the URL. Mutation handlers recheck membership and the required role inside their transaction.
 - Invitations are bound to the client's email, expire after seven days, and can be used once. Regenerating a link invalidates the older one. Links are copied manually; the app does not send email.
 - Proposal revisions are immutable. Only the client can decide on a published proposal, and an approval must match its revision and the agreement version it was based on.
 - Applying an approval updates the agreement, project budget and deadline, deliverables, request, event history, and notification in one transaction. Repeated or stale decisions cannot apply the same change twice.
@@ -158,7 +161,10 @@ Copy the keys from [`.env.example`](.env.example) into a local `.env` and set `D
 | `npm run db:migrate` | Apply checked-in migrations to an existing database |
 | `npm run db:studio` | Inspect the local database in Prisma Studio |
 | `npm run build` | Type-check and create production client and server builds |
+| `npm run test:authorization` | Run isolated PostgreSQL and HTTP access-control regression checks |
 | `npm start` | Serve the production build |
+
+The authorization regression command requires local PostgreSQL tools (`initdb`, `pg_ctl`) on `PATH`. It creates its own temporary database and API server on loopback ports, uses fictional accounts, checks unrelated-user access, mixed project/item IDs, role restrictions, profile ownership, notification isolation, and session revocation, then removes its database. It never uses your configured `DATABASE_URL` or deployed data.
 
 ## Current limits
 

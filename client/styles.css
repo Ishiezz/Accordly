@@ -118,7 +118,7 @@ input:focus, textarea:focus, select:focus { outline: 2px solid var(--focus); out
 
 /* Workspace shell */
 .app-layout { min-height: 100vh; }
-.sidebar { position: fixed; inset: 0 auto 0 0; width: 224px; background: var(--plum); color: #e4d7e8; display: flex; flex-direction: column; padding: 32px 17px 18px; z-index: 30; }
+.sidebar { position: fixed; inset: 0 auto 0 0; width: 224px; background: var(--plum); color: #e4d7e8; display: flex; flex-direction: column; padding: 32px 17px 18px; z-index: 30; overflow-y: auto; }
 .sidebar-brand { margin: 0 13px 44px; }
 .workspace-label { font-size: .65rem; letter-spacing: .13em; font-weight: 600; padding: 0 15px; margin-bottom: 13px; color: #cbb6d0; }
 .sidebar nav { display: grid; gap: 7px; }
@@ -126,11 +126,14 @@ input:focus, textarea:focus, select:focus { outline: 2px solid var(--focus); out
 .sidebar nav a.active { background: var(--lilac); color: var(--primary); font-weight: 600; }
 .sidebar nav a:not(.active):hover, .sidebar nav button:hover { background: #4a3650; }
 .nav-count { margin-left: auto; padding: 0 7px; font-size: .75rem; color: #f4e5fa; background: #5a4260; border-radius: 4px; }
-.sidebar-user { display: flex; gap: 9px; align-items: center; padding: 18px 4px 0; margin-top: auto; border-top: 1px solid #59435f; }
+.sidebar-footer { margin-top: auto; padding-top: 24px; }
+.sidebar-user { display: flex; gap: 9px; align-items: center; padding: 18px 4px 10px; border-top: 1px solid #59435f; }
 .sidebar-user > div { min-width: 0; }
 .sidebar-user strong { font-size: .8125rem; color: #f2e7f4; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 103px; }
 .sidebar-user small { font-size: .65rem; color: #cbb6d0; display: block; }
-.sidebar-user .icon-button { margin-left: auto; padding: 5px; min-width: 28px; color: #e4d7e8; }
+.sidebar-signout-button { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid #765b7d; border-radius: 7px; color: #f2e7f4; background: transparent; text-align: left; }
+.sidebar-signout-button:hover { background: #4a3650; }
+.account-signout { margin-top: 20px; }
 .app-main { margin-left: 224px; }
 .topbar { background: white; height: 70px; border-bottom: 1px solid var(--line); padding: 0 40px; display: flex; align-items: center; justify-content: space-between; }
 .topbar-breadcrumb { display: flex; align-items: center; gap: 13px; color: var(--muted); font-size: .8125rem; }
